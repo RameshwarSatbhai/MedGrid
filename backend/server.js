@@ -32,13 +32,13 @@ app.use(cors({
   credentials: true
 }));
 
-const io = socketIo(server, {
-  cors: {
-    origin: allowedOrigins,
-    methods: ["GET", "POST"],
-    credentials: true
-  }
-});
+// const io = socketIo(server, {
+//   cors: {
+//     origin: allowedOrigins,
+//     methods: ["GET", "POST"],
+//     credentials: true
+//   }
+// });
 
 
 // Middleware
