@@ -9,7 +9,7 @@ require('dotenv').config();
 const initDatabase = async () => {
   try {
     console.log('Connecting to MongoDB...');
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/medgrid', {
+    await mongoose.connect(process.env.MONGODB_URI , {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
