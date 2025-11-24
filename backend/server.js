@@ -5,7 +5,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const http = require('http');
-const socketIo = require('socket.io');
+// const socketIo = require('socket.io');
 require('dotenv').config();
 
 const app = express();
@@ -109,6 +109,14 @@ app.use((err, req, res, next) => {
     error: process.env.NODE_ENV === 'development' ? err.message : {}
   });
 });
+
+app.get("/", (req, res) => {
+  res.json({
+    message: "MedGrid backend running",
+    docs: "/api/health"
+  });
+});
+
 
 // 404 handler (must come last)
 app.use((req, res) => {
