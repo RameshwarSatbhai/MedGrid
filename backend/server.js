@@ -11,7 +11,15 @@ require('dotenv').config();
 const app = express();
 const server = http.createServer(app);
 
-// Allowed origins
+// Socket.io setup with CORS
+// const io = socketIo(server, {
+//   cors: {
+//     origin: process.env.CLIENT_URL || "http://localhost:3000",
+//     methods: ["GET", "POST"],
+//     credentials: true
+//   }
+// });
+
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
@@ -19,13 +27,11 @@ const allowedOrigins = [
   process.env.CLIENT_URL
 ].filter(Boolean);
 
-// CORS
 app.use(cors({
   origin: allowedOrigins,
   credentials: true
 }));
 
-// Socket.IO (define only once)
 const io = socketIo(server, {
   cors: {
     origin: allowedOrigins,
@@ -34,26 +40,34 @@ const io = socketIo(server, {
   }
 });
 
+
 // Middleware
 app.use(helmet());
 app.use(morgan('combined'));
+// app.use(cors({
+//   origin: process.env.CLIENT_URL || "http://localhost:3000",
+//   credentials: true
+// }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
   message: 'Too many requests from this IP, please try again later.'
 });
 app.use('/api/', limiter);
 
-// MongoDB connection
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('MongoDB connected successfully'))
-  .catch(err => console.error('MongoDB connection error:', err));
+// Database connection
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log('MongoDB connected successfully'))
+.catch(err => console.error('MongoDB connection error:', err));
 
-// Make io available to routes
+// Make io accessible to routes
 app.set('io', io);
 
 // Routes
@@ -63,46 +77,55 @@ app.use('/api/beds', require('./routes/beds'));
 app.use('/api/patients', require('./routes/patients'));
 app.use('/api/billing', require('./routes/billing'));
 
-// Health check
+// Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'OK',
+  res.json({ 
+    status: 'OK', 
     message: 'MedGrid API is running',
     timestamp: new Date().toISOString()
   });
 });
 
-// Socket.IO events
+// Socket.io connection handling
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
-
+  
+  // Join room for real-time updates
   socket.on('join-hospital', (hospitalId) => {
     socket.join(`hospital-${hospitalId}`);
     console.log(`Client ${socket.id} joined hospital-${hospitalId}`);
   });
-
+  
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
   });
 });
 
-// Global error handler
+// Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({
+  res.status(500).json({ 
     message: 'Something went wrong!',
     error: process.env.NODE_ENV === 'development' ? err.message : {}
   });
 });
 
-// 404 handler
+// 404 handler (must come last)
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-// Start server
+
+// // 404 handler
+// app.use('(.*)', (req, res) => {
+//   res.status(404).json({ message: 'Route not found' });
+// });
+
+
 const PORT = process.env.PORT || 5000;
+
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`MedGrid server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV}`);
 });
+
