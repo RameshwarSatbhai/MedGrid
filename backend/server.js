@@ -110,12 +110,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.get("/", (req, res) => {
-  res.json({
-    message: "MedGrid backend running",
-    docs: "/api/health"
-  });
-});
 
 
 // 404 handler (must come last)
