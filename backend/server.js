@@ -20,15 +20,15 @@ const server = http.createServer(app);
 //   }
 // });
 
-const allowedOrigins = [
-  "http://localhost:3000",
-  "http://localhost:5173",
-  "http://localhost:5174",
-  process.env.CLIENT_URL
-].filter(Boolean);
+// const allowedOrigins = [
+//   "http://localhost:3000",
+//   "http://localhost:5173",
+//   "http://localhost:5174",
+//   process.env.CLIENT_URL
+// ].filter(Boolean);
 
 app.use(cors({
-  origin: allowedOrigins,
+  origin: process.env.CLIENT_URL,
   credentials: true
 }));
 
